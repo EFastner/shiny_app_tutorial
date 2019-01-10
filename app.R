@@ -1,6 +1,16 @@
 library(shiny)
 
-ui <- fluidPage()
+bcl <- read.csv("bcl-data.csv", stringsAsFactors = FALSE)
+
+ui <- fluidPage(
+  titlePanel(title = "BC Liquor Store prices", 
+             windowTitle = "Store Prices"),
+  sidebarLayout(
+    sidebarPanel("our inputs will go here"),
+    mainPanel("the results will go here")
+  )
+)
+
 server <- function(input, output) {}
 
 shinyApp(ui = ui, server = server)
