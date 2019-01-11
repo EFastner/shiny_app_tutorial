@@ -23,11 +23,28 @@ ui <- fluidPage(
                              choices = c("CANADA", "FRANCE", "ITALY"))),
     mainPanel(plotOutput("coolplot"),
               br(), br(),
+              h3(textOutput("available_products")),
               tableOutput("results"))
   )
 )
 
 server <- function(input, output) {
+  output$available_products <- renderText({
+    filtered <- 
+      bcl %>%
+      filter(Price >= input$priceInput[1],
+             Price <= input$priceInput[2],
+             Type == input$typeInput,
+             Country == input$countryInput
+      )
+    
+    if(nrow(filtered) == 1){
+      paste(nrow(filtered), " available product")
+    }else{
+      paste(nrow(filtered), " available products")
+    }
+  })
+  
   output$coolplot <- renderPlot({
     filtered <- 
       bcl %>%
@@ -35,14 +52,26 @@ server <- function(input, output) {
              Price <= input$priceInput[2],
              Type == input$typeInput,
              Country == input$countryInput
-             )
+      )
+    
     ggplot(filtered, aes(Alcohol_Content)) +
       geom_histogram(fill = "deepskyblue3") +
-      ggtitle(label = "Number of Available Products", 
+      ggtitle(label = "Number of Available Products by Alcohol Content", 
               subtitle = paste("$",input$priceInput[1], 
                                " to $", input$priceInput[2], 
                                ", ", input$typeInput, 
                                ", ", input$countryInput))
+  })
+  
+  output$results <- renderTable({
+    filtered <- 
+      bcl %>%
+      filter(Price >= input$priceInput[1],
+             Price <= input$priceInput[2],
+             Type == input$typeInput,
+             Country == input$countryInput
+      )
+    filtered
   })
 }
 
