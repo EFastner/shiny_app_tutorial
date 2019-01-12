@@ -29,32 +29,25 @@ ui <- fluidPage(
 )
 
 server <- function(input, output) {
-  output$available_products <- renderText({
-    filtered <- 
-      bcl %>%
+  filtered <- reactive({
+    bcl %>%
       filter(Price >= input$priceInput[1],
              Price <= input$priceInput[2],
              Type == input$typeInput,
              Country == input$countryInput
       )
-    
-    if(nrow(filtered) == 1){
+  })
+  
+  output$available_products <- renderText({
+    if(nrow(filtered()) == 1){
       paste(nrow(filtered), " available product")
     }else{
-      paste(nrow(filtered), " available products")
+      paste(nrow(filtered()), " available products")
     }
   })
   
   output$coolplot <- renderPlot({
-    filtered <- 
-      bcl %>%
-      filter(Price >= input$priceInput[1],
-             Price <= input$priceInput[2],
-             Type == input$typeInput,
-             Country == input$countryInput
-      )
-    
-    ggplot(filtered, aes(Alcohol_Content)) +
+    ggplot(filtered(), aes(Alcohol_Content)) +
       geom_histogram(fill = "deepskyblue3") +
       ggtitle(label = "Number of Available Products by Alcohol Content", 
               subtitle = paste("$",input$priceInput[1], 
@@ -64,14 +57,7 @@ server <- function(input, output) {
   })
   
   output$results <- renderTable({
-    filtered <- 
-      bcl %>%
-      filter(Price >= input$priceInput[1],
-             Price <= input$priceInput[2],
-             Type == input$typeInput,
-             Country == input$countryInput
-      )
-    filtered
+    filtered()
   })
 }
 
