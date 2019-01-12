@@ -14,13 +14,9 @@ ui <- fluidPage(
                              max = 100,
                              value = c(25, 40),
                              pre ="$"),
-                 radioButtons(inputId = "typeInput",
-                              label = "Product Type",
-                              choices = c("BEER", "REFRESHMENT", "SPIRITS", "WINE"),
-                              selected = "WINE"),
-                 selectInput(inputId = "countryInput",
-                             label = "Country",
-                             choices = c("CANADA", "FRANCE", "ITALY"))),
+                 uiOutput("typeOutput"),
+                 uiOutput("subOutput"),
+                 uiOutput("countryOutput")),
     mainPanel(plotOutput("coolplot"),
               br(), br(),
               h3(textOutput("available_products")),
@@ -30,23 +26,35 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   filtered <- reactive({
+    if (is.null(input$countryInput)) {
+      return(NULL)
+    }
+    
     bcl %>%
       filter(Price >= input$priceInput[1],
              Price <= input$priceInput[2],
              Type == input$typeInput,
-             Country == input$countryInput
+             Country == input$countryInput,
+             Subtype == input$subInput
       )
   })
   
   output$available_products <- renderText({
+    if (is.null(filtered())) {
+      return()
+    }
+    
     if(nrow(filtered()) == 1){
-      paste(nrow(filtered), " available product")
+      paste(nrow(filtered()), " available product")
     }else{
       paste(nrow(filtered()), " available products")
     }
   })
   
   output$coolplot <- renderPlot({
+    if (is.null(filtered())) {
+      return()
+    }
     ggplot(filtered(), aes(Alcohol_Content)) +
       geom_histogram(fill = "deepskyblue3") +
       ggtitle(label = "Number of Available Products by Alcohol Content", 
@@ -58,6 +66,23 @@ server <- function(input, output) {
   
   output$results <- renderTable({
     filtered()
+  })
+  
+  output$countryOutput <- renderUI({
+    selectInput("countryInput", "Country",
+                sort(unique(bcl$Country)),
+                selected = "CANADA")
+  })
+  
+  output$typeOutput <- renderUI({
+    radioButtons("typeInput", "Type",
+                 sort(unique(bcl$Type)),
+                 selected = "BEER")
+  })
+  
+  output$subOutput <- renderUI({
+    selectInput("subInput", "Subtype",
+                sort(unique(filter(bcl, Type == input$typeInput)$Subtype)))
   })
 }
 
